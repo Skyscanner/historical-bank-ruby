@@ -87,6 +87,21 @@ Don't worry, the bank is thread-safe!
 - **Ruby >= 2.0**
 
 
+
+## Installation
+
+```
+gem install historical-bank
+```
+
+Alternatively, if you're using `bundler`, you can add
+``` ruby
+gem 'historical-bank'
+```
+to your `Gemfile` and run `bundle install`
+
+
+
 ## Usage
 
 Example scripts demonstrating all functionality can be found in [`examples/`](examples/).
