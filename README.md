@@ -23,6 +23,39 @@ This helps to optimize fetching and caching rates.
 Default base currency is EUR, but it can be changed in the config.
 
 
+### Dates, times, timezones
+
+The timezone used throughout this gem is the UTC timezone.
+
+All processed rates (fetched from OER, added manually, cached in Redis) are considered to be the [closing (end of day) rates](https://openexchangerates.org/faq/#eod-values) for their associated dates in UTC.
+For example, when we have a cached rate of EUR->USD on January 10th 2017 with value 1.25,
+this means that 1 EUR was equivalent to 1.25 USD on January 10th at 23:59:59.
+This is the historical rate that the bank will use for exchanging EUR with USD on that date.
+Consequently, a rate for a certain `date` fetched from OER becomes available at 00:00 UTC on `date+1`.
+
+For convenience, methods that accept `Date`s as arguments can accept `Time`s as well.
+When a `Time` is used, it is first converted into the UTC-equivalent `Date`,
+and method is executed as if that `Date` was passed instead.
+For example, when the `Time` `2017-01-10 02:50:00 +04:00` is passed as argument to `#exchange_with_historical`,
+
+```ruby
+from_money = Money.new(100_00, 'EUR')
+to_currency = 'USD'
+
+# 2017-01-10 02:50:00 +0400
+bank.exchange_with_historical(from_money, to_currency, Time.new(2017, 1, 10, 2, 50, 0, '+04:00'))
+# => #<Money fractional:10585 currency:USD>
+```
+
+it is equivalent to passing the `Date` `2017-01-09`
+
+```ruby
+# 2017-01-09
+bank.exchange_with_historical(from_money, to_currency, Date.new(2017, 1, 9))
+# => #<Money fractional:10585 currency:USD>
+```
+
+
 ### Caching
 
 We've implemented 2 layers of caching in order to obliterate latency!
@@ -38,6 +71,7 @@ Similarly, when the rate is found in Redis, it is again cached in memory.
 </p>
 
 Pretty simple and fast!
+
 
 ### Singleton
 
