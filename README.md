@@ -1,5 +1,7 @@
 # historical-bank-ruby
 
+[![Build Status](https://travis-ci.org/Skyscanner/historical-bank-ruby.svg?branch=master)](https://travis-ci.org/Skyscanner/historical-bank-ruby)
+
 ## Description
 
 This gem provides a bank that can serve historical rates,
