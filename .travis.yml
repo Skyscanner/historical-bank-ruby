@@ -14,3 +14,7 @@ env:
   - REDIS_PORT=6379
 script:
   - bundle exec rspec
+notifications:
+  email:
+    on_success: change
+    on_failure: change
