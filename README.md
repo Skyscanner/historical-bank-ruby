@@ -1,5 +1,6 @@
 # historical-bank-ruby
 
+[![Gem Version](https://badge.fury.io/rb/historical-bank.svg)](https://badge.fury.io/rb/historical-bank)
 [![Build Status](https://travis-ci.org/Skyscanner/historical-bank-ruby.svg?branch=master)](https://travis-ci.org/Skyscanner/historical-bank-ruby)
 
 ## Description
