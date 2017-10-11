@@ -116,6 +116,10 @@ Money::Bank::Historical.configure do |config|
   # (required) your OpenExchangeRates App ID
   config.oer_app_id = 'XXXXXXXXXXXXXXX'
 
+  # (required) account type on openexchangerate.org (default: 'Enterprise')
+  # replace 'FREE' with 'DEVELOPER', 'ENTERPRISE', or 'UNLIMITED', according to your account type.
+  config.account_type = Money::Bank::Historical::Configuration::AccountType::FREE
+
   # (optional) currency relative to which all the rates are stored (default: EUR)
   config.base_currency = Money::Currency.new('USD')
 
