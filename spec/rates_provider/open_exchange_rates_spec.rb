@@ -21,13 +21,68 @@ require 'spec_helper'
 class Money
   module RatesProvider
     describe OpenExchangeRates do
-      describe '#fetch_month_rates' do
-        let(:base_currency_iso_code) { %w(GBP EUR USD).sample }
-        let(:base_currency) { Currency.wrap(base_currency_iso_code) }
-        let(:date) { Date.new(2010, 10, 10) }
-        let(:app_id) { SecureRandom.hex }
-        let(:timeout) { 15 }
-        let(:provider) { OpenExchangeRates.new(app_id, base_currency, timeout) }
+      let(:base_currency_iso_code) { %w(GBP EUR USD).sample }
+      let(:base_currency) { Currency.wrap(base_currency_iso_code) }
+      let(:date) { Date.new(2010, 10, 10) }
+      let(:app_id) { SecureRandom.hex }
+      let(:timeout) { 15 }
+      let(:response_headers) { { 'Content-Type' => 'application/json; charset=utf-8' } }
+
+      describe '#fetch_rates with FREE account' do
+        let(:provider) { OpenExchangeRates.new(app_id, base_currency, timeout, Money::Bank::Historical::Configuration::AccountType::FREE) }
+        let(:url) { 'https://openexchangerates.org/api/historical/2010-10-01.json' }
+        let(:date) { Date.new(2010, 10, 01) }
+        let(:query) do
+          {
+            app_id: app_id,
+            base:   base_currency_iso_code,
+          }
+        end
+
+        before do
+          stub_request(:get, url).with(query: query)
+                                 .to_return(status: status, body: response_body, headers: response_headers)
+        end
+
+        subject { provider.fetch_rates(date) }
+
+        context 'when request succeeds' do
+          let(:status) { 200 }
+          let(:base_currency_iso_code) { 'EUR' }
+          let(:response_body) do
+            {
+              base:       base_currency_iso_code,
+              rates: {
+                'VND' => 1.1,
+                'USD' => 2.1,
+                'CAD' => 3.1,
+                'CNY' => 4.1
+              }
+            }.to_json
+          end
+
+          it 'format response similar to the full-month/time-series response' do
+            expect(subject.keys =~ ['base', 'rates', 'start_date', 'end_date'])
+          end
+
+          it 'return rates only for given date' do
+            dates = subject.map { |country, dates_hash| dates_hash.keys }.flatten.uniq
+            expect(dates.size == 1)
+            expect(dates.first == '2010-10-01')
+          end
+
+          it 'returns correct rates' do
+            expect(subject['VND']['2010-10-01']).to eq 1.1.to_d
+            expect(subject['USD']['2010-10-01']).to eq 2.1.to_d
+            expect(subject['CAD']['2010-10-01']).to eq 3.1.to_d
+            expect(subject['CNY']['2010-10-01']).to eq 4.1.to_d
+          end
+        end
+      end
+      
+
+      describe '#fetch_rates with UNLIMITED account' do
+        let(:provider) { OpenExchangeRates.new(app_id, base_currency, timeout, Money::Bank::Historical::Configuration::AccountType::UNLIMITED) }
         let(:url) { 'https://openexchangerates.org/api/time-series.json' }
         let(:query) do
           {
@@ -37,14 +92,13 @@ class Money
             end:    '2010-10-31'
           }
         end
-        let(:response_headers) { { 'Content-Type' => 'application/json; charset=utf-8' } }
 
         before do
           stub_request(:get, url).with(query: query)
                                  .to_return(status: status, body: response_body, headers: response_headers)
         end
 
-        subject { provider.fetch_month_rates(date) }
+        subject { provider.fetch_rates(date) }
 
         context 'when date is before 1999' do
           let(:date) { Faker::Date.between(Date.new(1900, 1, 1), Date.new(1998, 12, 31)) }
@@ -195,6 +249,8 @@ class Money
             end
           end
         end
+        
+
       end
     end
   end

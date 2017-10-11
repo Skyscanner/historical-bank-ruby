@@ -40,22 +40,23 @@ class Money
       # - +oer_app_id+ - App ID for the OpenExchangeRates API access (Enterprise or Unlimited plan)
       # - +base_currency+ - The base currency that will be used for the OER requests. It should be a +Money::Currency+ object.
       # - +timeout+ - The timeout in seconds to set on the requests
-      def initialize(oer_app_id, base_currency, timeout)
+      def initialize(oer_app_id, base_currency, timeout, account_type)
         @oer_app_id = oer_app_id
         @base_currency_code = base_currency.iso_code
         @timeout = timeout
+        @fetch_rates_method_name = ([Money::Bank::Historical::Configuration::AccountType::FREE, Money::Bank::Historical::Configuration::AccountType::DEVELOPER].include?(account_type) ? :fetch_historical_rates : :fetch_time_series_rates)
       end
 
-      # Fetches the rates for all available quote currencies for a whole month.
+      # Fetches the rates for all available quote currencies (for given date or for a whole month, depending on openexchangerates.org account type).
       # Fetching for all currencies or just one has the same API charge.
-      # In addition, the API doesn't allow fetching more than a month's data.
       #
       # It returns a +Hash+ with the rates for each quote currency and date
       # as shown in the example. Rates are +BigDecimal+.
       #
       # ==== Parameters
       #
-      # - +date+ - +date+'s month is the month for which we request rates. Minimum +date+ is January 1st 1999, as defined by the OER API (https://docs.openexchangerates.org/docs/api-introduction). Maximum +date+ is yesterday (UTC), as today's rates are not final (https://openexchangerates.org/faq/#timezone).
+      # - +date+ - +date+ for which the rates are requested. Minimum +date+ is January 1st 1999, as defined by the OER API (https://docs.openexchangerates.org/docs/api-introduction). Maximum +date+ is yesterday (UTC), as today's rates are not final (https://openexchangerates.org/faq/#timezone).
+      #            If Enterprise or Unlimited account in openexchangerates.org, the +date+'s month is the month for which we request rates
       #
       # ==== Errors
       #
@@ -64,21 +65,18 @@ class Money
       #
       # ==== Examples
       #
-      #   oer.fetch_month_rates(Date.new(2016, 10, 5))
+      #   oer.fetch_rates(Date.new(2016, 10, 5))
+      #   If Free or Developer account in openexchangerates.org, it will return only for the given date
+      #   # => {"AED"=>{"2016-10-05"=>#<BigDecimal:7fa19a188e98,'0.3672682E1',18(36)>}, {"AFN"=>{"2016-10-05"=>#<BigDecimal:7fa19a188e98,'0.3672682E1',18(36)>}, ...
+      #   If Enterprise or Unlimited account, it will return for the entire month for the given date 
       #   # => {"AED"=>{"2016-10-01"=>#<BigDecimal:7fa19a188e98,'0.3672682E1',18(36)>, "2016-10-02"=>#<BigDecimal:7fa19b11a5c8,'0.367296E1',18(36)>, ...
-      def fetch_month_rates(date)
+      def fetch_rates(date)
         if date < MIN_DATE || date > max_date
           raise ArgumentError, "Provided date #{date} for OER query should be "\
                                "between #{MIN_DATE} and #{max_date}"
         end
 
-        end_of_month = Date.civil(date.year, date.month, -1)
-
-        start_date = Date.civil(date.year, date.month, 1)
-        end_date = [end_of_month, max_date].min
-
-        options = request_options(start_date, end_date)
-        response = self.class.get('/time-series.json', options)
+        response = send(@fetch_rates_method_name, date)
 
         unless response.success?
           raise RequestFailed, "Month rates request failed for #{date} - "\
@@ -99,18 +97,44 @@ class Money
         result
       end
 
+
       private
 
-      def request_options(start_date, end_date)
-        {
+      # the API doesn't allow fetching more than a month's data.
+      def fetch_time_series_rates(date)
+        end_of_month = Date.civil(date.year, date.month, -1)
+        start_date = Date.civil(date.year, date.month, 1)
+        end_date = [end_of_month, max_date].min
+
+        options = request_options(start_date, end_date)
+        response = self.class.get('/time-series.json', options)
+      end
+
+      def fetch_historical_rates(date)
+        date_string = date.strftime('%Y-%m-%d')
+        options = request_options
+        response = self.class.get("/historical/#{date_string}.json", options)
+
+        if response.success?
+          # Making the reponse comply to the same structure returned from the #fetch_month_rates method (/time-series.json API)
+          response['start_date'] = response['end_date'] = date_string
+          response['rates'] = { date_string => response['rates'] }
+        end
+
+        response
+      end
+
+      def request_options(start_date = nil, end_date = nil)
+        options = {
           query: {
             app_id:  @oer_app_id,
-            start:   start_date,
-            end:     end_date,
             base:    @base_currency_code
           },
           timeout: @timeout
         }
+        options[:query][:start] = start_date if start_date
+        options[:query][:end] = end_date if end_date
+        options
       end
 
       # A historical day's rates can be obtained when the date changes at 00:00 UTC

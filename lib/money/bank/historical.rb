@@ -27,6 +27,13 @@ class Money
     class Historical < Bank::Base
       # Configuration class for +Money::Bank::Historical+
       class Configuration
+        module AccountType
+          FREE = 'Free'
+          DEVELOPER = 'Developer'
+          ENTERPRISE = 'Enterprise'
+          UNLIMITED = 'Unlimited'
+        end
+
         # +Money::Currency+ relative to which all exchange rates will be cached
         attr_accessor :base_currency
         # URL of the Redis server
@@ -37,6 +44,8 @@ class Money
         attr_accessor :oer_app_id
         # timeout to set in the OpenExchangeRates requests
         attr_accessor :timeout
+        # type of account to know which API endpoints are useable
+        attr_accessor :account_type
 
         def initialize
           @base_currency = Currency.new('EUR')
@@ -44,6 +53,7 @@ class Money
           @redis_namespace = 'currency'
           @oer_app_id = nil
           @timeout = 15
+          @account_type = AccountType::ENTERPRISE
         end
       end
 
@@ -84,7 +94,8 @@ class Money
                                                  Historical.configuration.redis_namespace)
         @provider = RatesProvider::OpenExchangeRates.new(Historical.configuration.oer_app_id,
                                                          @base_currency,
-                                                         Historical.configuration.timeout)
+                                                         Historical.configuration.timeout,
+                                                         Historical.configuration.account_type)
         # for controlling access to @rates
         @mutex = Mutex.new
       end
@@ -284,7 +295,7 @@ class Money
       end
 
       def fetch_provider_base_rate(currency, date)
-        currency_date_rate_hash = @provider.fetch_month_rates(date)
+        currency_date_rate_hash = @provider.fetch_rates(date)
 
         date_rate_hash = currency_date_rate_hash[currency.iso_code]
         rate = date_rate_hash && date_rate_hash[date.iso8601]

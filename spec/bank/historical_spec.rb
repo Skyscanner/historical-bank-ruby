@@ -228,7 +228,7 @@ class Money
           allow_any_instance_of(RatesStore::HistoricalRedis).to receive(:get_rates)
             .with(to_currency).and_return(to_currency_base_rates_store)
           allow_any_instance_of(RatesProvider::OpenExchangeRates)
-            .to receive(:fetch_month_rates).with(date).and_return(rates_provider)
+            .to receive(:fetch_rates).with(date).and_return(rates_provider)
         end
 
         subject { bank.exchange_with_historical(from_money, to_currency, datetime) }
@@ -421,7 +421,7 @@ class Money
           before do
             # unstub and let it blow up
             allow_any_instance_of(RatesProvider::OpenExchangeRates)
-              .to receive(:fetch_month_rates).and_call_original
+              .to receive(:fetch_rates).and_call_original
           end
 
           it 'fails' do
