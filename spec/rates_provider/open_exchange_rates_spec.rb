@@ -48,18 +48,8 @@ class Money
 
         context 'when request succeeds' do
           let(:status) { 200 }
-          let(:base_currency_iso_code) { 'EUR' }
-          let(:response_body) do
-            {
-              base:       base_currency_iso_code,
-              rates: {
-                'VND' => 1.1,
-                'USD' => 2.1,
-                'CAD' => 3.1,
-                'CNY' => 4.1
-              }
-            }.to_json
-          end
+          let(:base_currency_iso_code) { 'USD' }
+          let(:response_body) { File.read('./spec/fixtures/historical-2010-10-01.json') }
 
           it 'format response similar to the full-month/time-series response' do
             expect(subject.keys =~ ['base', 'rates', 'start_date', 'end_date'])
@@ -72,10 +62,10 @@ class Money
           end
 
           it 'returns correct rates' do
-            expect(subject['VND']['2010-10-01']).to eq 1.1.to_d
-            expect(subject['USD']['2010-10-01']).to eq 2.1.to_d
-            expect(subject['CAD']['2010-10-01']).to eq 3.1.to_d
-            expect(subject['CNY']['2010-10-01']).to eq 4.1.to_d
+            expect(subject['VND']['2010-10-01']).to eq 19474.963646.to_d
+            expect(subject['EUR']['2010-10-01']).to eq 0.726556.to_d
+            expect(subject['CAD']['2010-10-01']).to eq 1.022502.to_d
+            expect(subject['CNY']['2010-10-01']).to eq 6.691335.to_d
           end
         end
       end
