@@ -118,7 +118,7 @@ Money::Bank::Historical.configure do |config|
 
   # (required) account type on openexchangerate.org (default: 'Enterprise')
   # replace 'FREE' with 'DEVELOPER', 'ENTERPRISE', or 'UNLIMITED', according to your account type.
-  config.account_type = Money::Bank::Historical::Configuration::AccountType::FREE
+  config.oer_account_type = Money::RatesProvider::OpenExchangeRates::AccountType::FREE
 
   # (optional) currency relative to which all the rates are stored (default: EUR)
   config.base_currency = Money::Currency.new('USD')

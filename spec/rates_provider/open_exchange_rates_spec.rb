@@ -29,7 +29,7 @@ class Money
       let(:response_headers) { { 'Content-Type' => 'application/json; charset=utf-8' } }
 
       describe '#fetch_rates with FREE account' do
-        let(:provider) { OpenExchangeRates.new(app_id, base_currency, timeout, Money::Bank::Historical::Configuration::AccountType::FREE) }
+        let(:provider) { OpenExchangeRates.new(app_id, base_currency, timeout, OpenExchangeRates::AccountType::FREE) }
         let(:url) { 'https://openexchangerates.org/api/historical/2010-10-01.json' }
         let(:date) { Date.new(2010, 10, 01) }
         let(:query) do
@@ -82,7 +82,7 @@ class Money
       
 
       describe '#fetch_rates with UNLIMITED account' do
-        let(:provider) { OpenExchangeRates.new(app_id, base_currency, timeout, Money::Bank::Historical::Configuration::AccountType::UNLIMITED) }
+        let(:provider) { OpenExchangeRates.new(app_id, base_currency, timeout, OpenExchangeRates::AccountType::UNLIMITED) }
         let(:url) { 'https://openexchangerates.org/api/time-series.json' }
         let(:query) do
           {

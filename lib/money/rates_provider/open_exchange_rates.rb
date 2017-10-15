@@ -36,15 +36,26 @@ class Money
       # (https://docs.openexchangerates.org/docs/historical-json)
       MIN_DATE = Date.new(1999, 1, 1).freeze
 
+      module AccountType
+        FREE = 'Free'.freeze
+        DEVELOPER = 'Developer'.freeze
+        ENTERPRISE = 'Enterprise'.freeze
+        UNLIMITED = 'Unlimited'.freeze
+      end
+
       # ==== Parameters
       # - +oer_app_id+ - App ID for the OpenExchangeRates API access (Enterprise or Unlimited plan)
       # - +base_currency+ - The base currency that will be used for the OER requests. It should be a +Money::Currency+ object.
       # - +timeout+ - The timeout in seconds to set on the requests
-      def initialize(oer_app_id, base_currency, timeout, account_type)
+      def initialize(oer_app_id, base_currency, timeout, oer_account_type)
         @oer_app_id = oer_app_id
         @base_currency_code = base_currency.iso_code
         @timeout = timeout
-        @fetch_rates_method_name = ([Money::Bank::Historical::Configuration::AccountType::FREE, Money::Bank::Historical::Configuration::AccountType::DEVELOPER].include?(account_type) ? :fetch_historical_rates : :fetch_time_series_rates)
+        @fetch_rates_method_name = if oer_account_type == AccountType::FREE || oer_account_type == AccountType::DEVELOPER
+          :fetch_historical_rates
+        else
+          :fetch_time_series_rates
+        end
       end
 
       # Fetches the rates for all available quote currencies (for given date or for a whole month, depending on openexchangerates.org account type).
@@ -111,7 +122,7 @@ class Money
       end
 
       def fetch_historical_rates(date)
-        date_string = date.strftime('%Y-%m-%d')
+        date_string = date.iso8601
         options = request_options
         response = self.class.get("/historical/#{date_string}.json", options)
 
