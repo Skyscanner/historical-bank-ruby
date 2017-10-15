@@ -89,10 +89,6 @@ class Money
 
         response = send(@fetch_rates_method_name, date)
 
-        unless response.success?
-          raise RequestFailed, "Month rates request failed for #{date} - "\
-                               "Code: #{response.code} - Body: #{response.body}"
-        end
 
         result = Hash.new { |hash, key| hash[key] = {} }
 
@@ -113,12 +109,21 @@ class Money
 
       # the API doesn't allow fetching more than a month's data.
       def fetch_time_series_rates(date)
+        options = request_options
+
         end_of_month = Date.civil(date.year, date.month, -1)
         start_date = Date.civil(date.year, date.month, 1)
         end_date = [end_of_month, max_date].min
+        options[:query][:start] = start_date
+        options[:query][:end] = end_date
 
-        options = request_options(start_date, end_date)
         response = self.class.get('/time-series.json', options)
+
+        unless response.success?
+          raise RequestFailed, "Month rates request failed for #{date} - "\
+                               "Code: #{response.code} - Body: #{response.body}"
+        end
+        response        
       end
 
       def fetch_historical_rates(date)
@@ -126,16 +131,23 @@ class Money
         options = request_options
         response = self.class.get("/historical/#{date_string}.json", options)
 
-        if response.success?
-          # Making the reponse comply to the same structure returned from the #fetch_month_rates method (/time-series.json API)
-          response['start_date'] = response['end_date'] = date_string
-          response['rates'] = { date_string => response['rates'] }
+        unless response.success?
+          raise RequestFailed, "Historical rates request failed for #{date} - "\
+                               "Code: #{response.code} - Body: #{response.body}"
         end
 
-        response
+        # Making the return value comply to the same structure returned from the #fetch_month_rates method (/time-series.json API)
+        { 
+          'start_date' => date_string,
+          'end_date' => date_string,
+          'base' => response['base'],
+          'rates' => {
+            date_string => response['rates']
+          }
+        }
       end
 
-      def request_options(start_date = nil, end_date = nil)
+      def request_options
         options = {
           query: {
             app_id:  @oer_app_id,
@@ -143,9 +155,6 @@ class Money
           },
           timeout: @timeout
         }
-        options[:query][:start] = start_date if start_date
-        options[:query][:end] = end_date if end_date
-        options
       end
 
       # A historical day's rates can be obtained when the date changes at 00:00 UTC
