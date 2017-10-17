@@ -44,9 +44,10 @@ class Money
       end
 
       # ==== Parameters
-      # - +oer_app_id+ - App ID for the OpenExchangeRates API access (Enterprise or Unlimited plan)
+      # - +oer_app_id+ - App ID for the OpenExchangeRates API access
       # - +base_currency+ - The base currency that will be used for the OER requests. It should be a +Money::Currency+ object.
       # - +timeout+ - The timeout in seconds to set on the requests
+      # - +oer_account_type+ - The OpenExchangeRates account type. Should be one of +AccountType::FREE+, +DEVELOPER+, +ENTERPRISE+, or +UNLIMITED+
       def initialize(oer_app_id, base_currency, timeout, oer_account_type)
         @oer_app_id = oer_app_id
         @base_currency_code = base_currency.iso_code

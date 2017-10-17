@@ -58,6 +58,7 @@ class Money
 
       # Configures the bank. Parameters that can be configured:
       # - +oer_app_id+ - (required) your OpenExchangeRates App ID
+      # - +oer_account_type+ - (optional) your OpenExchangeRates account type. Choose one of the values in the +Money::RatesProvider::OpenExchangeRates::AccountType+ module (default: +Money::RatesProvider::OpenExchangeRates::AccountType::ENTERPRISE+)
       # - +base_currency+ - (optional) +Money::Currency+ relative to which all the rates are stored (default: EUR)
       # - +redis_url+ - (optional) the URL of the Redis server (default: +redis://localhost:6379+)
       # - +redis_namespace+ - (optional) Redis namespace to prefix all keys (default: +currency+)
@@ -67,6 +68,7 @@ class Money
       #
       #   Money::Bank::Historical.configure do |config|
       #     config.oer_app_id = 'XXXXXXXXXXXXXXXXXXXXX'
+      #     config.oer_account_type = Money::RatesProvider::OpenExchangeRates::AccountType::FREE
       #     config.base_currency = Money::Currency.new('USD')
       #     config.redis_url = 'redis://localhost:6379'
       #     config.redis_namespace = 'currency'

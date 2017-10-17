@@ -7,7 +7,7 @@
 
 This gem provides a bank that can serve historical rates,
 contrary to most bank implementations that provide only current market rates.
-[Open Exchange Rates](https://openexchangerates.org/) (OER) is used as the provider of the rates and an Enterprise or Unlimited plan is required.
+[Open Exchange Rates](https://openexchangerates.org/) (OER) is used as the provider of the rates.
 As the HTTP requests to OER can add latency to your calls, a `RatesStore` (cache) based on Redis was added, making it super-fast.
 
 You can use it as your default bank and keep calling the standard `money` gem methods (`Money#exchange_to`, `Bank#exchange_with`). On top of that, we've added a few more methods that allow accessing historical rates (`Money#exchange_to_historical`, `Bank#exchange_with_historical`).
@@ -85,7 +85,7 @@ Don't worry, the bank is thread-safe!
 
 ## Requirements
 
-- **OpenExchangeRates Enterprise or Unlimited plan** - It is needed for calling the `/time-series.json` endpoint which serves historical rates.
+- **OpenExchangeRates account** - If on the Free or Developer plan, the `/historical/*.json` endpoint is used for fetching rates for single days. If on the Enterprise or Unlimited plan, the `/time-series.json` endpoint is used for fetching rates for whole months, increasing efficiency.
 - **Redis >= 2.8** (versions of Redis earlier than 2.8 may also work fine, but this gem has only been tested with 2.8 and above.)
 - **Ruby >= 2.0**
 
@@ -116,7 +116,7 @@ Money::Bank::Historical.configure do |config|
   # (required) your OpenExchangeRates App ID
   config.oer_app_id = 'XXXXXXXXXXXXXXX'
 
-  # (required) account type on openexchangerate.org (default: 'Enterprise')
+  # (optional) account type on openexchangerate.org (default: 'Enterprise')
   # replace 'FREE' with 'DEVELOPER', 'ENTERPRISE', or 'UNLIMITED', according to your account type.
   config.oer_account_type = Money::RatesProvider::OpenExchangeRates::AccountType::FREE
 
