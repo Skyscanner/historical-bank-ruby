@@ -18,7 +18,7 @@
 
 Gem::Specification.new do |s|
   s.name        = 'historical-bank'
-  s.version     = '0.1.1'
+  s.version     = '0.1.2'
   s.summary     = 'Historical Bank'
   s.description = 'A `Money::Bank::Base` with historical exchange rates'
   s.authors     = ['Kostis Dadamis', 'Emili Parreno']
@@ -48,7 +48,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'rspec',      '~> 3.5'
   s.add_development_dependency 'pry-byebug', '~> 3.4'
-  s.add_development_dependency 'rubocop',    '~> 0.46'
+  s.add_development_dependency 'rubocop',    '~> 0.52'
   s.add_development_dependency 'rack-test',  '~> 0.6'
   s.add_development_dependency 'webmock',    '~> 2.3'
   s.add_development_dependency 'faker',      '~> 1.6'
