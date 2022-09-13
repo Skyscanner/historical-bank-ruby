@@ -89,10 +89,10 @@ class Money
                                'be equal to 1'
         end
 
-        @redis.pipelined do
+        @redis.pipelined do |pipeline|
           currency_date_rate_hash.each do |iso_currency, iso_date_rate_hash|
             k = key(iso_currency)
-            @redis.mapped_hmset(k, iso_date_rate_hash)
+            pipeline.mapped_hmset(k, iso_date_rate_hash)
           end
         end
       rescue Redis::BaseError => e
